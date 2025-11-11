@@ -1,0 +1,210 @@
+{
+  "nav": {
+    "home": "Home",
+    "services": "Our Services",
+    "about": "About Us",
+    "articles": "Articles / News",
+    "contact": "Contact Us",
+    "login": "Login",
+    "logout": "Logout",
+    "myAccount": "My Account",
+    "admin": "Admin Panel"
+  },
+  "home": {
+    "title": "TEEYAI PRIVATE TRACKING",
+    "subtitle": "Import-Export Service, International Products Delivered to You",
+    "trackButton": "Track Package",
+    "features": {
+      "title": "Our Features",
+      "reliable": "Reliable",
+      "reliableDesc": "Confidence in service quality every time",
+      "fast": "Fast & Agile",
+      "fastDesc": "Quick processing at every step",
+      "support": "Your Logistics Partner",
+      "supportDesc": "Professional consultation and guidance"
+    },
+    "hero": {
+      "description": "Trust us to handle your import-export goods with our professional team",
+      "searchPlaceholder": "Please enter your product tracking number",
+      "searchButton": "Check Product Status",
+      "stats": {
+        "safe": "100% Safe",
+        "fast": "Fast Delivery",
+        "realtime": "Real-time Tracking"
+      }
+    },
+    "howItWorks": {
+      "badge": "HOW IT WORKS",
+      "title": "Simple in just",
+      "steps": "4 steps",
+      "subtitle": "Simple and fast process for worry-free delivery",
+      "step1": {
+        "title": "Free Registration",
+        "description": "Create your account in seconds with no hidden costs or fees"
+      },
+      "step2": {
+        "title": "Choose Service",
+        "description": "Select shipping service that suits your needs, both domestic and international"
+      },
+      "step3": {
+        "title": "Real-time Tracking",
+        "description": "Access package information anywhere, anytime with real-time tracking system"
+      },
+      "step4": {
+        "title": "Receive Package",
+        "description": "Receive your package on time with delivery certificate for added confidence"
+      }
+    },
+    "whyChooseUs": {
+      "rating": "5,000+ Reviews",
+      "whyChooseUs": "WHY CHOOSE US",
+      "title": "Why choose",
+      "titleHighlight": "our service",
+      "subtitle": "We care about every detail to provide the best service"
+    },
+    "articles": {
+      "badge": "Articles & News",
+      "title": "Latest Articles",
+      "subtitle": "Updated knowledge and new trends in logistics and shipping industry",
+      "viewAll": "View All Articles",
+      "readMore": "Read More",
+      "article1": {
+        "title": "5 Tips to Improve Shipping Efficiency",
+        "excerpt": "Discover ways to improve shipping efficiency, reduce costs, and increase customer satisfaction",
+        "tag": "Tips"
+      },
+      "article2": {
+        "title": "Real-time Package Tracking",
+        "excerpt": "Modern tracking system helps you know every movement of your package, increasing transparency",
+        "tag": "Technology"
+      },
+      "article3": {
+        "title": "Logistics Industry Trends 2025",
+        "excerpt": "Discover new trends in logistics from AI, Automation to Green Logistics",
+        "tag": "Trends"
+      },
+      "article4": {
+        "title": "Professional Packaging Methods",
+        "excerpt": "Proper packaging techniques help prevent product damage and save shipping costs",
+        "tag": "Guide"
+      }
+    },
+    "cta": {
+      "badge": "GET STARTED",
+      "title": "Ready to transform",
+      "titleHighlight": "your business",
+      "titleSuffix": "for the better?",
+      "subtitle": "Join thousands of entrepreneurs building a better future with flexible logistics systems",
+      "subtitle2": "Your first step starts today and unlock real growth through knowledge and technology",
+      "getStarted": "Get Started Now",
+      "viewServices": "View Service Packages",
+      "feature1": {
+        "title": "100% Safe",
+        "description": "High-level security system"
+      },
+      "feature2": {
+        "title": "Real-time Tracking",
+        "description": "Status updates at every step"
+      },
+      "feature3": {
+        "title": "Fast Delivery",
+        "description": "Delivered to you on time"
+      }
+    }
+  },
+  "tracking": {
+    "title": "Track Package",
+    "subtitle": "Search by tracking number or phone number",
+    "trackingNumber": "Tracking Number",
+    "phoneNumber": "Phone Number",
+    "searchButton": "Search",
+    "status": "Status",
+    "updatedAt": "Updated At",
+    "history": "Tracking History",
+    "notFound": "Package not found",
+    "statuses": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "in_transit": "In Transit",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    }
+  },
+  "services": {
+    "title": "Our Services",
+    "domestic": "Domestic Shipping",
+    "domesticDesc": "Fast and reliable domestic shipping service",
+    "international": "International Shipping",
+    "internationalDesc": "Standardized international shipping service",
+    "warehouse": "Warehouse Service",
+    "warehouseDesc": "Storage and warehouse management service",
+    "sourcing": "International Product Sourcing & Procurement",
+    "sourcingDesc": "Assistance in sourcing and purchasing products from abroad"
+  },
+  "about": {
+    "title": "About Us",
+    "vision": "Vision",
+    "mission": "Mission",
+    "description": "Behind every business is a logistics system that never stops"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "name": "Full Name",
+    "email": "Email",
+    "phone": "Phone Number",
+    "message": "Message",
+    "submit": "Send Message",
+    "address": "Address",
+    "success": "Message sent successfully"
+  },
+  "auth": {
+    "login": "Login",
+    "username": "Username",
+    "password": "Password",
+    "loginButton": "Login",
+    "loginError": "Invalid username or password"
+  },
+  "account": {
+    "title": "My Account",
+    "profile": "Profile",
+    "fullName": "Full Name",
+    "phone": "Phone Number",
+    "email": "Email",
+    "idAddress": "ID Card Address",
+    "shippingAddress": "Shipping Address",
+    "trackingHistory": "Tracking History",
+    "save": "Save"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "customers": "Customer Management",
+    "tracking": "Tracking Management",
+    "content": "Content Management",
+    "settings": "Settings",
+    "activityLog": "Activity Log",
+    "addCustomer": "Add Customer",
+    "editCustomer": "Edit Customer",
+    "deleteCustomer": "Delete Customer",
+    "generateCode": "Generate Customer Code",
+    "customerCode": "Customer Code",
+    "updateStatus": "Update Status",
+    "emailNotification": "Email Notification",
+    "enableNotification": "Enable Notification",
+    "disableNotification": "Disable Notification"
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "close": "Close",
+    "back": "Back"
+  }
+}
+

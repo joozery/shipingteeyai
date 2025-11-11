@@ -1,0 +1,39 @@
+{
+  "name": "teeyai-backend",
+  "version": "1.0.0",
+  "description": "Backend API for TEEYAI Import Master - Tracking & Logistics System",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "prod": "NODE_ENV=production node src/server.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop teeyai-backend",
+    "pm2:restart": "pm2 restart teeyai-backend",
+    "pm2:logs": "pm2 logs teeyai-backend",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "logistics",
+    "tracking",
+    "import",
+    "export"
+  ],
+  "author": "TEEYAI Import Master",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/translate": "^9.3.0",
+    "bcryptjs": "^3.0.3",
+    "body-parser": "^2.2.0",
+    "cloudinary": "^2.8.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "mysql2": "^3.15.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
