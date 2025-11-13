@@ -10,3 +10,4 @@ router.get('/user/:userType/:userId', authenticateToken, requireAdmin, activityL
 
 module.exports = router
 
+

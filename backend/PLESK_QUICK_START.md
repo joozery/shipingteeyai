@@ -88,3 +88,4 @@ curl http://yourdomain.com/api/health
 
 ดูไฟล์ `DEPLOY_PLESK.md` สำหรับรายละเอียดเพิ่มเติม
 
+

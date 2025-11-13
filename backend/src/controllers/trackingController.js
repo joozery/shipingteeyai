@@ -2,19 +2,38 @@ const bcrypt = require('bcryptjs')
 const { pool } = require('../config/database')
 const { createActivityLog } = require('./activityLogController')
 
-const mapTrackingItem = (row) => ({
-  id: row.id,
-  trackingNumber: row.tracking_number,
-  customerId: row.customer_id,
-  customerName: row.customer_name,
-  customerEmail: row.customer_email,
-  statusTitle: row.status_title,
-  status: row.status,
-  currentLocation: row.current_location,
-  expectedDate: row.expected_date,
-  createdAt: row.created_at,
-  updatedAt: row.updated_at,
-})
+const mapTrackingItem = (row) => {
+  // Format expected_date as YYYY-MM-DD to avoid timezone issues
+  let expectedDate = null
+  if (row.expected_date) {
+    // If it's a Date object, format it as YYYY-MM-DD
+    if (row.expected_date instanceof Date) {
+      const year = row.expected_date.getFullYear()
+      const month = String(row.expected_date.getMonth() + 1).padStart(2, '0')
+      const day = String(row.expected_date.getDate()).padStart(2, '0')
+      expectedDate = `${year}-${month}-${day}`
+    } else if (typeof row.expected_date === 'string') {
+      // If it's already a string, extract YYYY-MM-DD part
+      expectedDate = row.expected_date.split('T')[0].split(' ')[0]
+    }
+  }
+  
+  return {
+    id: row.id,
+    trackingNumber: row.tracking_number,
+    customerId: row.customer_id,
+    customerName: row.customer_name,
+    customerEmail: row.customer_email,
+    productName: row.product_name,
+    productQuantity: row.product_quantity,
+    statusTitle: row.status_title,
+    status: row.status,
+    currentLocation: row.current_location,
+    expectedDate: expectedDate,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
 
 const mapTrackingHistory = (row) => ({
   id: row.id,
@@ -68,12 +87,9 @@ const getTrackingItems = async (req, res) => {
 const createTrackingItem = async (req, res) => {
   const {
     trackingNumber,
-    customerName,
-    customerEmail,
     customerId,
-    userId,
-    password,
-    customerPhone,
+    productName,
+    productQuantity,
     statusTitle,
     status,
     expectedDate,
@@ -81,8 +97,8 @@ const createTrackingItem = async (req, res) => {
     description,
   } = req.body
 
-  if (!trackingNumber || !customerName || !customerEmail) {
-    return res.status(400).json({ message: 'กรุณากรอกข้อมูลหมายเลขพัสดุ ชื่อลูกค้า และอีเมลให้ครบถ้วน' })
+  if (!trackingNumber || !customerId) {
+    return res.status(400).json({ message: 'กรุณากรอกหมายเลข TRACKING และเลือกลูกค้า' })
   }
 
   const connection = await pool.getConnection()
@@ -90,48 +106,83 @@ const createTrackingItem = async (req, res) => {
   try {
     await connection.beginTransaction()
 
-    let resolvedCustomerId = customerId || null
+    // Get customer info
+    const [customers] = await connection.execute(
+      'SELECT id, name, email FROM customers WHERE id = ? LIMIT 1',
+      [customerId]
+    )
 
-    if (!resolvedCustomerId && userId && password) {
-      const [existingCustomers] = await connection.execute(
-        'SELECT id FROM customers WHERE user_id = ? OR email = ? LIMIT 1',
-        [userId, customerEmail]
-      )
-
-      if (existingCustomers.length > 0) {
-        resolvedCustomerId = existingCustomers[0].id
-      } else {
-        const passwordHash = await bcrypt.hash(password, 10)
-        const [customerResult] = await connection.execute(
-          'INSERT INTO customers (user_id, password_hash, name, email, phone) VALUES (?, ?, ?, ?, ?)',
-          [userId, passwordHash, customerName, customerEmail, customerPhone || null]
-        )
-        resolvedCustomerId = customerResult.insertId
-      }
+    if (customers.length === 0) {
+      await connection.rollback()
+      return res.status(404).json({ message: 'ไม่พบข้อมูลลูกค้า' })
     }
+
+    const customer = customers[0]
 
     // Convert expectedDate to MySQL format (YYYY-MM-DD) if provided
     let formattedExpectedDate = null
     if (expectedDate) {
-      const date = new Date(expectedDate)
-      formattedExpectedDate = date.toISOString().split('T')[0] // Convert to YYYY-MM-DD
+      console.log('[createTrackingItem] Received expectedDate:', expectedDate, 'Type:', typeof expectedDate)
+      // If already in YYYY-MM-DD format, use it directly to avoid timezone issues
+      if (typeof expectedDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(expectedDate)) {
+        formattedExpectedDate = expectedDate
+        console.log('[createTrackingItem] Using date directly:', formattedExpectedDate)
+      } else {
+        // Otherwise, parse and format
+        const date = new Date(expectedDate)
+        if (!isNaN(date.getTime())) {
+          // Use local date components to avoid timezone shift
+          const year = date.getFullYear()
+          const month = String(date.getMonth() + 1).padStart(2, '0')
+          const day = String(date.getDate()).padStart(2, '0')
+          formattedExpectedDate = `${year}-${month}-${day}`
+          console.log('[createTrackingItem] Parsed date:', formattedExpectedDate)
+        }
+      }
     }
 
-    const [insertResult] = await connection.execute(
-      `INSERT INTO tracking_items 
-        (tracking_number, customer_id, customer_name, customer_email, status_title, status, current_location, expected_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)` ,
-      [
-        trackingNumber,
-        resolvedCustomerId,
-        customerName,
-        customerEmail,
-        statusTitle || 'order_completed',
-        status || 'pending',
-        currentLocation || null,
-        formattedExpectedDate,
-      ]
-    )
+    // Try to insert with product fields, fallback to basic fields if columns don't exist
+    let insertResult
+    try {
+      [insertResult] = await connection.execute(
+        `INSERT INTO tracking_items 
+          (tracking_number, customer_id, customer_name, customer_email, product_name, product_quantity, status_title, status, current_location, expected_date)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)` ,
+        [
+          trackingNumber,
+          customerId,
+          customer.name,
+          customer.email,
+          productName || null,
+          productQuantity || 1,
+          statusTitle || 'order_completed',
+          status || 'pending',
+          currentLocation || null,
+          formattedExpectedDate,
+        ]
+      )
+    } catch (error) {
+      // If product columns don't exist, use basic insert
+      if (error.code === 'ER_BAD_FIELD_ERROR') {
+        [insertResult] = await connection.execute(
+          `INSERT INTO tracking_items 
+            (tracking_number, customer_id, customer_name, customer_email, status_title, status, current_location, expected_date)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)` ,
+          [
+            trackingNumber,
+            customerId,
+            customer.name,
+            customer.email,
+            statusTitle || 'order_completed',
+            status || 'pending',
+            currentLocation || null,
+            formattedExpectedDate,
+          ]
+        )
+      } else {
+        throw error
+      }
+    }
 
     const trackingItemId = insertResult.insertId
 
@@ -169,7 +220,7 @@ const createTrackingItem = async (req, res) => {
       'admin',
       req.user.id,
       'เพิ่มรายการพัสดุใหม่',
-      `Tracking: ${trackingNumber} - ${customerName}`,
+      `Tracking: ${trackingNumber} - ${customer.name}`,
       ipAddress
     )
 
@@ -220,8 +271,23 @@ const updateTrackingItem = async (req, res) => {
     // Convert expectedDate to MySQL format (YYYY-MM-DD) if provided
     let nextExpectedDate = null
     if (expectedDate) {
-      const date = new Date(expectedDate)
-      nextExpectedDate = date.toISOString().split('T')[0] // Convert to YYYY-MM-DD
+      console.log('[updateTrackingItem] Received expectedDate:', expectedDate, 'Type:', typeof expectedDate)
+      // If already in YYYY-MM-DD format, use it directly to avoid timezone issues
+      if (typeof expectedDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(expectedDate)) {
+        nextExpectedDate = expectedDate
+        console.log('[updateTrackingItem] Using date directly:', nextExpectedDate)
+      } else {
+        // Otherwise, parse and format
+        const date = new Date(expectedDate)
+        if (!isNaN(date.getTime())) {
+          // Use local date components to avoid timezone shift
+          const year = date.getFullYear()
+          const month = String(date.getMonth() + 1).padStart(2, '0')
+          const day = String(date.getDate()).padStart(2, '0')
+          nextExpectedDate = `${year}-${month}-${day}`
+          console.log('[updateTrackingItem] Parsed date:', nextExpectedDate)
+        }
+      }
     }
 
     await connection.execute(

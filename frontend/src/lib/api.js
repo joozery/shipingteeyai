@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const baseURL = import.meta.env.VITE_API_URL || 'https://teeyai.devwooyou.space'
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5001'
 
 export const apiClient = axios.create({
   baseURL,

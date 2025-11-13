@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Search, Edit, Trash2, Key, Loader2, Users, MapPin, Eye, Plus, Phone as PhoneIcon, Truck } from 'lucide-react'
+import { Search, Edit, Trash2, Key, Loader2, Users, MapPin, Eye, Plus, Phone as PhoneIcon, Truck, Copy, Check } from 'lucide-react'
 import Swal from 'sweetalert2'
 import apiClient from '@/lib/api'
 
@@ -41,6 +41,19 @@ export default function CustomerManagement() {
   const [currentAddressCustomer, setCurrentAddressCustomer] = useState(null)
   const [addresses, setAddresses] = useState([])
   const [loadingAddresses, setLoadingAddresses] = useState(false)
+
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [creatingCustomer, setCreatingCustomer] = useState(false)
+  const [createFormData, setCreateFormData] = useState({
+    name: '',
+    taxId: '',
+    phone: '',
+    email: '',
+    address: '',
+    username: '',
+    password: '',
+  })
+  const [copiedField, setCopiedField] = useState(null)
 
   useEffect(() => {
     fetchCustomers()
@@ -208,6 +221,94 @@ export default function CustomerManagement() {
     }
   }
 
+  const handleCreateCustomer = async () => {
+    if (!createFormData.name || !createFormData.email || !createFormData.username || !createFormData.password) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'ข้อมูลไม่ครบถ้วน',
+        text: 'กรุณากรอกชื่อ, อีเมล, username และ password ให้ครบถ้วน',
+        confirmButtonColor: '#f59e0b',
+      })
+      return
+    }
+
+    // ตรวจสอบ password length
+    if (createFormData.password.length < 6) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Password สั้นเกินไป',
+        text: 'Password ต้องมีอย่างน้อย 6 ตัวอักษร',
+        confirmButtonColor: '#f59e0b',
+      })
+      return
+    }
+
+    try {
+      setCreatingCustomer(true)
+      const { data } = await apiClient.post('/api/customers', createFormData)
+
+      if (data?.success) {
+        await fetchCustomers()
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'สร้างลูกค้าใหม่สำเร็จ!',
+          text: `สร้างบัญชี ${createFormData.username} เรียบร้อยแล้ว`,
+          confirmButtonColor: '#10b981',
+        })
+
+        // Reset form
+        setCreateFormData({
+          name: '',
+          taxId: '',
+          phone: '',
+          email: '',
+          address: '',
+          username: '',
+          password: '',
+        })
+        setCreateDialogOpen(false)
+      }
+    } catch (error) {
+      console.error('create customer error', error)
+      
+      // Check if it's a 404 error (route not found on production)
+      if (error?.response?.status === 404) {
+        Swal.fire({
+          icon: 'error',
+          title: 'ไม่พบ API Endpoint',
+          html: `
+            <div class="text-left">
+              <p class="mb-2">API endpoint ยังไม่มีใน production server</p>
+              <p class="text-sm text-gray-600">กรุณา deploy backend ไปยัง production server ก่อน</p>
+            </div>
+          `,
+          confirmButtonColor: '#ef4444',
+        })
+      } else {
+        const message = error?.response?.data?.message || 'ไม่สามารถสร้างลูกค้าได้'
+        Swal.fire({
+          icon: 'error',
+          title: 'สร้างไม่สำเร็จ',
+          text: message,
+          confirmButtonColor: '#ef4444',
+        })
+      }
+    } finally {
+      setCreatingCustomer(false)
+    }
+  }
+
+  const handleCopyToClipboard = async (text, field) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedField(field)
+      setTimeout(() => setCopiedField(null), 2000)
+    } catch (error) {
+      console.error('Failed to copy:', error)
+    }
+  }
+
   const handleDeleteCustomer = (customer) => {
     Swal.fire({
       icon: 'warning',
@@ -261,6 +362,10 @@ export default function CustomerManagement() {
           <h1 className="text-3xl font-bold mb-2">{t('admin.customers')}</h1>
           <p className="text-muted-foreground">จัดการข้อมูลลูกค้าทั้งหมด</p>
         </div>
+        <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          เพิ่มลูกค้าใหม่
+        </Button>
       </div>
 
       <Card>
@@ -524,6 +629,120 @@ export default function CustomerManagement() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddressDialogOpen(false)}>
               ปิด
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Customer Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>เพิ่มลูกค้าใหม่</DialogTitle>
+            <DialogDescription>
+              กรอกข้อมูลลูกค้าและสร้าง Username/Password สำหรับเข้าสู่ระบบ
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="createName">
+                ชื่อ-สกุล/นิติบุคคล <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="createName"
+                value={createFormData.name}
+                onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
+                placeholder="กรอกชื่อ-สกุลหรือชื่อนิติบุคคล"
+              />
+            </div>
+            <div>
+              <Label htmlFor="createTaxId">หมายเลขนิติบุคคล</Label>
+              <Input
+                id="createTaxId"
+                value={createFormData.taxId}
+                onChange={(e) => setCreateFormData({ ...createFormData, taxId: e.target.value })}
+                placeholder="กรอกหมายเลขนิติบุคคล (ถ้ามี)"
+              />
+            </div>
+            <div>
+              <Label htmlFor="createPhone">เบอร์โทรศัพท์</Label>
+              <Input
+                id="createPhone"
+                value={createFormData.phone}
+                onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
+                placeholder="กรอกเบอร์โทรศัพท์"
+              />
+            </div>
+            <div>
+              <Label htmlFor="createEmail">
+                E-MAIL <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="createEmail"
+                type="email"
+                value={createFormData.email}
+                onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
+                placeholder="กรอกอีเมล"
+              />
+            </div>
+            <div>
+              <Label htmlFor="createAddress">ที่อยู่</Label>
+              <textarea
+                id="createAddress"
+                rows={4}
+                value={createFormData.address}
+                onChange={(e) => setCreateFormData({ ...createFormData, address: e.target.value })}
+                placeholder="กรอกที่อยู่"
+                className="flex w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <Label htmlFor="createUsername">
+                USER NAME <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="createUsername"
+                value={createFormData.username}
+                onChange={(e) => setCreateFormData({ ...createFormData, username: e.target.value })}
+                placeholder="กรอก Username สำหรับเข้าสู่ระบบ"
+              />
+            </div>
+            <div>
+              <Label htmlFor="createPassword">
+                PASSWORD <span className="text-red-500">*</span> <span className="text-gray-500 text-xs font-normal">(อย่างน้อย 6 ตัวอักษร)</span>
+              </Label>
+              <Input
+                id="createPassword"
+                type="password"
+                value={createFormData.password}
+                onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
+                placeholder="กรอก Password (อย่างน้อย 6 ตัวอักษร)"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCreateDialogOpen(false)
+                setCreateFormData({
+                  name: '',
+                  taxId: '',
+                  phone: '',
+                  email: '',
+                  address: '',
+                  username: '',
+                  password: '',
+                })
+                setCopiedField(null)
+              }}
+              disabled={creatingCustomer}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={handleCreateCustomer} disabled={creatingCustomer} className="gap-2">
+              {creatingCustomer && <Loader2 className="h-4 w-4 animate-spin" />}
+              สร้างลูกค้าใหม่
             </Button>
           </DialogFooter>
         </DialogContent>

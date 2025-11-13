@@ -17,7 +17,20 @@ const getAllActivityLogs = async (req, res) => {
     const { limit = 100, offset = 0 } = req.query
     
     // Get activity logs with user information
-    const [rows] = await pool.execute(
+    // Ensure values are integers for MySQL
+    const limitNum = parseInt(limit, 10) || 100
+    const offsetNum = parseInt(offset, 10) || 0
+    
+    // Validate that values are valid integers
+    if (isNaN(limitNum) || limitNum < 0) {
+      return res.status(400).json({ message: 'Invalid limit parameter' })
+    }
+    if (isNaN(offsetNum) || offsetNum < 0) {
+      return res.status(400).json({ message: 'Invalid offset parameter' })
+    }
+    
+    // Use query instead of execute for LIMIT/OFFSET to avoid parameter binding issues
+    const [rows] = await pool.query(
       `SELECT 
         al.*,
         CASE 
@@ -29,8 +42,7 @@ const getAllActivityLogs = async (req, res) => {
       LEFT JOIN admin_users au ON al.user_type = 'admin' AND al.user_id = au.id
       LEFT JOIN customers c ON al.user_type = 'customer' AND al.user_id = c.id
       ORDER BY al.created_at DESC
-      LIMIT ? OFFSET ?`,
-      [parseInt(limit), parseInt(offset)]
+      LIMIT ${limitNum} OFFSET ${offsetNum}`
     )
     
     // Get total count
@@ -48,8 +60,8 @@ const getAllActivityLogs = async (req, res) => {
       success: true, 
       data: logs,
       total,
-      limit: parseInt(limit),
-      offset: parseInt(offset),
+      limit: limitNum,
+      offset: offsetNum,
     })
   } catch (error) {
     console.error('getAllActivityLogs error:', error)

@@ -27,17 +27,25 @@ export default function AdminDashboard() {
     }
   }, [loading, user, token, logout, navigate])
 
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true)
+
   // Fetch recent activity logs for notifications
   useEffect(() => {
-    if (user && token) {
+    if (user && token && notificationsEnabled) {
       fetchNotifications()
       // Refresh notifications every 30 seconds
-      const interval = setInterval(fetchNotifications, 30000)
+      const interval = setInterval(() => {
+        if (notificationsEnabled) {
+          fetchNotifications()
+        }
+      }, 30000)
       return () => clearInterval(interval)
     }
-  }, [user, token])
+  }, [user, token, notificationsEnabled])
 
   const fetchNotifications = async () => {
+    if (!notificationsEnabled) return
+    
     try {
       const { data } = await apiClient.get('/api/activity-logs?limit=10')
       const logs = data?.data || []
@@ -45,6 +53,14 @@ export default function AdminDashboard() {
       // Count unread (for now, all are considered unread)
       setUnreadCount(logs.length > 0 ? logs.length : 0)
     } catch (error) {
+      // If 500 or 404 error, disable notifications to prevent spam
+      if (error?.response?.status === 500 || error?.response?.status === 404) {
+        setNotificationsEnabled(false)
+        setNotifications([])
+        setUnreadCount(0)
+        return
+      }
+      // For other errors, still log but don't disable
       console.error('fetch notifications error', error)
       setNotifications([])
       setUnreadCount(0)
@@ -113,7 +129,7 @@ export default function AdminDashboard() {
                   <span className="text-xs font-semibold text-blue-500 uppercase tracking-widest">
                     teeyaiimport
                   </span>
-                  <span className="text-lg font-bold text-gray-900">Admin Control</span>
+                  <span className="text-sm font-bold text-gray-900">TEEYAI IMPORT MASTER</span>
                 </div>
               </div>
               <button
@@ -222,11 +238,11 @@ export default function AdminDashboard() {
       {/* Main Content Area */}
       <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-24'}`}>
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-40">
           <div className="h-16 px-4 md:px-8 flex items-center justify-between">
             {/* Left: Page Title / Breadcrumb */}
             <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold text-gray-800">
+              <h1 className="text-xl font-bold text-white">
                 {menuItems.find(item => isActive(item.path, item.exact))?.label || 'Dashboard'}
               </h1>
             </div>
@@ -235,10 +251,10 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-4">
               {/* Search */}
               <div className="relative hidden md:block">
-                <Search className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="h-4 w-4 text-gray-300 absolute left-3 top-1/2 -translate-y-1/2" />
                 <Input
                   placeholder="ค้นหา..."
-                  className="pl-9 pr-4 py-2 rounded-xl bg-gray-50 border-0 text-sm text-gray-600 focus-visible:ring-2 focus-visible:ring-blue-200"
+                  className="pl-9 pr-4 py-2 rounded-xl bg-slate-700 border-0 text-sm text-white placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-blue-400"
                 />
               </div>
 
@@ -246,9 +262,9 @@ export default function AdminDashboard() {
               <div className="relative">
                 <button 
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative"
+                  className="p-2 hover:bg-slate-700 rounded-lg transition-colors relative"
                 >
-                  <Bell className="h-5 w-5 text-gray-600" />
+                  <Bell className="h-5 w-5 text-white" />
                   {unreadCount > 0 && (
                     <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                   )}
@@ -331,19 +347,19 @@ export default function AdminDashboard() {
               </div>
 
               {/* User Profile Dropdown */}
-              <div className="relative pl-4 border-l border-gray-200">
+              <div className="relative pl-4 border-l border-slate-700">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-3 hover:opacity-80 transition-opacity"
                 >
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-gray-800">{user.name}</p>
-                    <p className="text-xs text-gray-500">{user.role}</p>
+                    <p className="text-sm font-semibold text-white">{user.name}</p>
+                    <p className="text-xs text-gray-300">{user.role}</p>
                   </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-400 rounded-full flex items-center justify-center text-white font-bold">
                     {user.name?.charAt(0) || 'A'}
                   </div>
-                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`h-4 w-4 text-gray-300 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
                 </button>
 
                 {/* User Menu Dropdown */}

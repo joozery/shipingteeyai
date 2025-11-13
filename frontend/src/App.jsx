@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import Layout from './components/Layout'
+import ScrollToTop from './components/ScrollToTop'
 import Home from './pages/Home'
 import Services from './pages/Services'
 import About from './pages/About'
@@ -25,6 +26,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+      <ScrollToTop />
       <Routes>
         {/* Public Routes with Layout */}
         <Route path="/" element={<Layout />}>

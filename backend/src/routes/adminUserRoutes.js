@@ -14,3 +14,4 @@ router.delete('/:id', authenticateToken, requireAdmin, adminUserController.delet
 
 module.exports = router
 
+

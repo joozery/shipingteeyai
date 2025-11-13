@@ -21,6 +21,7 @@ const statusTitleMap = {
   china_in_transit: 'ระหว่างการขนส่งในประเทศจีน',
   overseas_warehouse: 'สินค้าเข้าโกดังสินค้าในต่างประเทศ เตรียมการส่งออก',
   expected_delivery: 'คาดการณ์ได้รับสินค้า',
+  delivery_completed: 'จัดส่งสินค้าสำเร็จ ขอบคุณที่ใช้บริการ',
 }
 
 export default function Tracking() {

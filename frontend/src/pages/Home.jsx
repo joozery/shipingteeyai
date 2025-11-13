@@ -484,25 +484,23 @@ export default function Home() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center animate-fade-in" style={{ animationDelay: '300ms' }}>
-                <Link to="/contact">
-                  <Button 
-                    size="default"
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-5 text-sm font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                  >
-                    {t('home.cta.getStarted')}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link to="/services">
-                  <Button 
-                    size="default"
-                    variant="outline"
-                    className="border-2 border-blue-600 bg-white hover:bg-blue-50 text-blue-600 px-6 py-5 text-sm font-semibold rounded-xl transition-all duration-300"
-                  >
-                    {t('home.cta.viewServices')}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
+                <Button 
+                  size="default"
+                  onClick={() => navigate('/tracking')}
+                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-5 text-sm font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  {t('home.cta.getStarted')}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Button 
+                  size="default"
+                  variant="outline"
+                  onClick={() => navigate('/services')}
+                  className="border-2 border-blue-600 bg-white hover:bg-blue-50 text-blue-600 px-6 py-5 text-sm font-semibold rounded-xl transition-all duration-300"
+                >
+                  {t('home.cta.viewServices')}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
           </div>
 
           {/* Stats or Features */}

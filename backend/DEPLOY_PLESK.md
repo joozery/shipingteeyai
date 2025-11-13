@@ -355,3 +355,4 @@ chmod -R 755 /var/www/vhosts/yourdomain.com/httpdocs/backend
 2. ตรวจสอบ Plesk documentation
 3. ติดต่อ hosting provider support
 
+

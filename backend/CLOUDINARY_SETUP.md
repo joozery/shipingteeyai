@@ -40,3 +40,4 @@ CLOUDINARY_API_SECRET=your-api-secret-here
 - อย่า commit `.env` ลง Git
 - หาก API Secret หายไป ต้องสร้างใหม่ใน Cloudinary Dashboard
 
+

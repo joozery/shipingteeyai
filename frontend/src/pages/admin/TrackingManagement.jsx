@@ -28,6 +28,7 @@ const statusTitleOptions = [
   { value: 'china_in_transit', label: 'ระหว่างการขนส่งในประเทศจีน' },
   { value: 'overseas_warehouse', label: 'สินค้าเข้าโกดังสินค้าในต่างประเทศ เตรียมการส่งออก' },
   { value: 'expected_delivery', label: 'คาดการณ์ได้รับสินค้า' },
+  { value: 'delivery_completed', label: 'จัดส่งสินค้าสำเร็จ ขอบคุณที่ใช้บริการ' },
 ]
 
 export default function TrackingManagement() {
@@ -36,16 +37,17 @@ export default function TrackingManagement() {
   const [trackingItems, setTrackingItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
+  
+  const [customers, setCustomers] = useState([])
+  const [loadingCustomers, setLoadingCustomers] = useState(false)
 
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [addSaving, setAddSaving] = useState(false)
   const [addForm, setAddForm] = useState({
     trackingNumber: '',
-    customerName: '',
-    customerEmail: '',
-    customerPhone: '',
-    userId: '',
-    password: '',
+    customerId: '',
+    productName: '',
+    productQuantity: 1,
     status: 'pending',
     statusTitle: 'order_completed',
     expectedDate: '',
@@ -82,6 +84,24 @@ export default function TrackingManagement() {
     fetchTrackingItems()
   }, [])
 
+  const fetchCustomers = async () => {
+    try {
+      setLoadingCustomers(true)
+      const { data } = await apiClient.get('/api/customers/all')
+      setCustomers(data?.data || [])
+    } catch (error) {
+      console.error('fetch customers error', error)
+    } finally {
+      setLoadingCustomers(false)
+    }
+  }
+
+  useEffect(() => {
+    if (addDialogOpen) {
+      fetchCustomers()
+    }
+  }, [addDialogOpen])
+
   const filteredItems = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
     if (!term) return trackingItems
@@ -99,11 +119,9 @@ export default function TrackingManagement() {
   const resetAddForm = () => {
     setAddForm({
       trackingNumber: '',
-      customerName: '',
-      customerEmail: '',
-      customerPhone: '',
-      userId: '',
-      password: '',
+      customerId: '',
+      productName: '',
+      productQuantity: 1,
       status: 'pending',
       statusTitle: 'order_completed',
       expectedDate: '',
@@ -116,11 +134,11 @@ export default function TrackingManagement() {
   }
 
   const handleAddItem = async () => {
-    if (!addForm.trackingNumber || !addForm.customerName || !addForm.customerEmail || !addForm.userId || !addForm.password) {
+    if (!addForm.trackingNumber || !addForm.customerId) {
       Swal.fire({
         icon: 'warning',
         title: 'ข้อมูลไม่ครบถ้วน',
-        text: 'กรุณากรอกข้อมูลให้ครบทุกช่อง',
+        text: 'กรุณากรอกหมายเลข TRACKING และเลือกลูกค้า',
         confirmButtonColor: '#f59e0b',
       })
       return
@@ -130,16 +148,16 @@ export default function TrackingManagement() {
       setAddSaving(true)
       const payload = {
         trackingNumber: addForm.trackingNumber.trim(),
-        customerName: addForm.customerName.trim(),
-        customerEmail: addForm.customerEmail.trim(),
-        customerPhone: addForm.customerPhone.trim() || null,
-        userId: addForm.userId.trim(),
-        password: addForm.password,
+        customerId: parseInt(addForm.customerId),
+        productName: addForm.productName.trim() || null,
+        productQuantity: parseInt(addForm.productQuantity) || 1,
         status: addForm.status,
         statusTitle: addForm.statusTitle,
         expectedDate: addForm.expectedDate || null,
         currentLocation: addForm.currentLocation || null,
       }
+      
+      console.log('[handleAddItem] Sending expectedDate:', payload.expectedDate, 'Type:', typeof payload.expectedDate)
 
       const { data } = await apiClient.post('/api/tracking', payload)
       const newItem = data?.data
@@ -195,6 +213,9 @@ export default function TrackingManagement() {
         expectedDate: updateForm.expectedDate || null,
         description: updateForm.description,
       }
+      
+      console.log('[handleSaveUpdate] Sending expectedDate:', payload.expectedDate, 'Type:', typeof payload.expectedDate)
+      console.log('[handleSaveUpdate] updateForm.expectedDate:', updateForm.expectedDate)
 
       const { data } = await apiClient.put(`/api/tracking/${currentItem.id}`, payload)
       const updatedItem = data?.data
@@ -344,12 +365,12 @@ export default function TrackingManagement() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>เพิ่มรายการพัสดุใหม่</DialogTitle>
-            <DialogDescription>กรอกข้อมูลพัสดุและผู้ติดต่อเพื่อติดตามสถานะ</DialogDescription>
+            <DialogDescription>กรอกข้อมูลพัสดุและเลือกลูกค้าเพื่อติดตามสถานะ</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="trackingNumber">หมายเลขพัสดุ <span className="text-red-500">*</span></Label>
+                <Label htmlFor="trackingNumber">หมายเลข TRACKING <span className="text-red-500">*</span></Label>
                 <Input
                   id="trackingNumber"
                   value={addForm.trackingNumber}
@@ -358,65 +379,54 @@ export default function TrackingManagement() {
                 />
               </div>
               <div>
-                <Label htmlFor="customerEmail">อีเมลลูกค้า <span className="text-red-500">*</span></Label>
-                <Input
-                  id="customerEmail"
-                  type="email"
-                  value={addForm.customerEmail}
-                  onChange={(e) => handleAddFormChange('customerEmail', e.target.value)}
-                  placeholder="customer@example.com"
-                />
+                <Label htmlFor="customerId">USER ID ลูกค้า <span className="text-red-500">*</span></Label>
+                <Select
+                  value={addForm.customerId}
+                  onValueChange={(value) => handleAddFormChange('customerId', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={loadingCustomers ? "กำลังโหลด..." : "เลือกลูกค้า"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.id.toString()}>
+                        {customer.userId} - {customer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="customerName">ชื่อลูกค้า <span className="text-red-500">*</span></Label>
+                <Label htmlFor="productName">ชื่อสินค้า</Label>
                 <Input
-                  id="customerName"
-                  value={addForm.customerName}
-                  onChange={(e) => handleAddFormChange('customerName', e.target.value)}
-                  placeholder="ชื่อ-นามสกุล"
+                  id="productName"
+                  value={addForm.productName}
+                  onChange={(e) => handleAddFormChange('productName', e.target.value)}
+                  placeholder="ระบุชื่อสินค้า"
                 />
               </div>
               <div>
-                <Label htmlFor="customerPhone">เบอร์โทรลูกค้า</Label>
+                <Label htmlFor="productQuantity">จำนวนของสินค้า</Label>
                 <Input
-                  id="customerPhone"
-                  value={addForm.customerPhone}
-                  onChange={(e) => handleAddFormChange('customerPhone', e.target.value)}
-                  placeholder="เช่น 081-234-5678"
+                  id="productQuantity"
+                  type="number"
+                  min="1"
+                  value={addForm.productQuantity}
+                  onChange={(e) => handleAddFormChange('productQuantity', e.target.value)}
+                  placeholder="1"
                 />
               </div>
             </div>
             <div>
-              <Label htmlFor="currentLocation">สถานที่ปัจจุบัน</Label>
+              <Label htmlFor="currentLocation">สถานที่จัดส่งสินค้า</Label>
               <Input
                 id="currentLocation"
                 value={addForm.currentLocation}
                 onChange={(e) => handleAddFormChange('currentLocation', e.target.value)}
-                placeholder="กรอกตำแหน่งปัจจุบัน"
+                placeholder="กรอกสถานที่จัดส่ง"
               />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="userId">User ID ลูกค้า <span className="text-red-500">*</span></Label>
-                <Input
-                  id="userId"
-                  value={addForm.userId}
-                  onChange={(e) => handleAddFormChange('userId', e.target.value)}
-                  placeholder="เช่น USER1234"
-                />
-              </div>
-              <div>
-                <Label htmlFor="password">รหัสผ่านลูกค้า <span className="text-red-500">*</span></Label>
-                <Input
-                  id="password"
-                  type="text"
-                  value={addForm.password}
-                  onChange={(e) => handleAddFormChange('password', e.target.value)}
-                  placeholder="กำหนดรหัสผ่านให้ลูกค้า"
-                />
-              </div>
             </div>
             <div>
               <Label htmlFor="statusTitle">หัวข้อสถานะ</Label>
