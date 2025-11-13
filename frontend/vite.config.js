@@ -16,9 +16,10 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  define: {
-    'import.meta.env.VITE_API_URL': JSON.stringify('http://localhost:5001'),
-  },
+  // Removed hardcoded API URL to use .env file instead
+  // define: {
+  //   'import.meta.env.VITE_API_URL': JSON.stringify('http://localhost:5001'),
+  // },
   server: {
     port: 5173,
     strictPort: true,
